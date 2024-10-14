@@ -13,7 +13,7 @@ from tqdm import tqdm,trange
 from tqdm import tqdm,trange
 from torchvision import transforms
 
-
+#鉴别器
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -42,6 +42,7 @@ class Discriminator(nn.Module):
         loss.backward()
         self.optimiser.step()
 
+#生成器
 class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
@@ -59,9 +60,9 @@ class Generator(nn.Module):
     def forward(self, inputs):
         return self.model(inputs)
 
-    def train(self, D, inputs, targets):  # 用分类器的损失来训练生成
-        g_output = self.forward(inputs)  # 生成器generator的输出
-        d_output = D.forward(g_output)  # 分类器discriminator的输出
+    def train(self, D, inputs, targets):  
+        g_output = self.forward(inputs) 
+        d_output = D.forward(g_output)  
         loss = D.loss_function(d_output, targets)
         self.counter += 1
         if self.counter % 10 == 0:
@@ -70,7 +71,7 @@ class Generator(nn.Module):
         loss.backward()
         self.optimiser.step()
 
-
+#数据加载器
 class MnistDataset(Dataset):
     def __init__(self, csv_file):
         #[60000 rows x 785 columns] (60000, 785) <class 'pandas.core.frame.DataFrame'>
@@ -80,24 +81,22 @@ class MnistDataset(Dataset):
         return len(self.data_df)
 
     def __getitem__(self, index):
-        label = self.data_df.iloc[index, 0] #5
+        label = self.data_df.iloc[index, 0]
         image_values = torch.tensor(self.data_df.iloc[index, 1:].values,dtype=torch.float32) / 255.0
         return image_values, label
 
-    def plot_image(self, index):
-        img = self.data_df.iloc[index, 1:].values.reshape(28, 28)
-        plt.title("label = " + str(self.data_df.iloc[index, 0]))
-        plt.imshow(img, interpolation='none', cmap='Blues')
-
-
+#生成随机图像
 def generate_random_image(size):
     random_data = torch.rand(size)
     return random_data
 
+#生成随机的正太分布种子
 def generate_random_seed(size):
     random_data = torch.randn(size)
     return random_data
 
+#显示/保存图像
+#prog:损失值列表 例如[1.2,1.1,1.0,0.9,0.8,0.4,....]
 def show_loss_curve(prog,title):
     plt.figure(figsize=(8, 8),dpi=70)
     x=np.linspace(1,len(prog),len(prog))
@@ -107,23 +106,18 @@ def show_loss_curve(prog,title):
     plt.close()
     # plt.show()
 
+#获取值为1的标签
 def get_lab_1(size):
     return torch.ones(size,dtype=torch.float32)
 
+#获取值为0的标签
 def get_lab_0(size):
     return torch.zeros(size,dtype=torch.float32)
 
-def get_img_tensor(pd,a):
-    np_img = np.array(pd[a].reshape(1, -1), dtype=np.float32)[0]  # (784,)
-    t_img = torch.tensor(np_img, dtype=torch.float32)  # torch.Size([784]) <class 'torch.Tensor'>
-    return t_img
-
-def show_tensor(img):
-    plt.imshow(img.detach().numpy().reshape((28, 28)))
-    plt.show()
-
+#保存tensor图像  
+#idx是索引号
 def save_tensor(t_fake,idx):
-    images = t_fake.reshape(t_fake.shape[0], 28, 28)#torch.Size([81,28,28])
+    images = t_fake.reshape(t_fake.shape[0], 28, 28)    #images   torch.Size([81,28,28])
     fig, axs = plt.subplots(9, 9, figsize=(10, 10))
     for i in range(t_fake.shape[0]):
         row = i // 9
@@ -143,11 +137,11 @@ if __name__ == '__main__':
     G=Generator().cuda()
 
     idx=0
-    for epoch in range(80):
+    for epoch in range(80): 
         for (imgs,labs) in tqdm(loader_data,desc='train {}/{}'.format(epoch+1,80)):
             D.train(
-                imgs.cuda(),                                #torch.Size([81, 784])
-                get_lab_1(size=(imgs.shape[0],1)).cuda(),   #torch.Size([81, 1])
+                imgs.cuda(),                                #imgs   torch.Size([81, 784])
+                get_lab_1(size=(imgs.shape[0],1)).cuda(),   #get_lab_1(size=(imgs.shape[0],1))    torch.Size([81, 1])
             )
             D.train(
                 G.forward(generate_random_seed(size=(imgs.shape[0],100)).cuda()).detach().cuda(),
@@ -158,12 +152,12 @@ if __name__ == '__main__':
                 generate_random_seed(size=(imgs.shape[0],100)).cuda(),
                 get_lab_1(size=(imgs.shape[0],1)).cuda(),
             )
-            t_fake = G.forward(generate_random_seed(size=(imgs.shape[0],100)).cuda())#torch.Size([81, 784])
+            t_fake = G.forward(generate_random_seed(size=(imgs.shape[0],100)).cuda())   #t_fake  torch.Size([81, 784])
             if idx%500==0:
                 save_tensor(t_fake.detach().cpu(), idx)
             idx+=1
         torch.save(D,'./MAIN/Discriminator_epoch_{}.pth'.format(epoch+1))
         torch.save(G,'./MAIN/Generator_epoch_{}.pth'.format(epoch+1))
 
-    show_loss_curve(D.progress[0::],'Discriminator')
-    show_loss_curve(G.progress[0::],'Generator')
+    show_loss_curve(D.progress,'Discriminator')
+    show_loss_curve(G.progress,'Generator')
