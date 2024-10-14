@@ -13,5 +13,5 @@ code文件是Pytorch代码，其中相关的文件路径需要自己手动改变
 # model_path文件夹
 模型权重文件，使用torch.load('./Generator_epoch_80.pth')加载。
 
-# data文件夹
-保存的是MNIST数据集，CSV格式   MNIST官网：http://yann.lecun.com/exdb/mnist/
+# 使用数据
+使用的是MNIST数据集，CSV格式   MNIST官网：http://yann.lecun.com/exdb/mnist/
