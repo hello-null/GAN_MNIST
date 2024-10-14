@@ -1,5 +1,5 @@
 # GAN_MNIST
-基于生成对抗网络(GAN)生成手写数字
+基于生成对抗网络(GAN)生成手写数字，控制台输出如下：
 
 D:\Python\python.exe D:/PyCharm/WorkSpace/Package_1/Pytorch/GAN/MNIST/main.py
 train 1/80: 100%|██████████| 741/741 [00:22<00:00, 33.62it/s]
